@@ -8,6 +8,22 @@
 #include<pwd.h>
 #include<grp.h>
 #include<time.h>
+#include<stdbool.h>
+
+
+#define MAX_NAME_LEN 256
+
+bool isSymlink(const char*path)
+{
+    struct stat st;
+    return lstat(path,&st)==0&&S_ISLNK(st.st_mode);
+}
+
+bool isSpecialDirectory(const char *path) 
+{
+    return strstr(path, "/run/user/") != NULL && strstr(path, "/gvfs") != NULL;
+}
+
 //定义文件信息结构体
 struct fileinfo
 {
@@ -155,11 +171,22 @@ void print(struct fileinfo*fp,int l,int i,int s,int maxLinkLen,int maxSizeLen,in
 //主要函数
 void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s)
 {
-    if(dirpath==NULL)
+    if(isSymlink(dirpath)||dirpath==NULL||isSpecialDirectory(dirpath))
     return;
 
+    if(R)
+    {
+        printf("%s:\n",dirpath);
+    }
 
-    struct fileinfo fileinfos[1024];
+    //分配初始内存
+    int capasity=1024;
+    struct fileinfo*fileinfos=(struct fileinfo*)malloc(sizeof(struct fileinfo)*capasity);
+    if(fileinfos==NULL)
+    {
+        perror("malloc error");
+    }
+
     DIR*dp=opendir(dirpath);
     if(dp==NULL)
     {
@@ -170,7 +197,18 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
     struct stat filestat;
     struct dirent*dirent;
     while((dirent=readdir(dp))!=NULL)
-    {
+    {   
+        //动态扩容
+        if(count>=capasity)
+        {
+            capasity*=2;
+            fileinfos=realloc(fileinfos,capasity*(sizeof(struct fileinfo)));
+        }
+        if(fileinfos==NULL)
+        {
+            perror("realloc error");
+        }
+
         //实现-a，过滤隐藏文件
         if(!a&&dirent->d_name[0]=='.')
         {
@@ -236,43 +274,45 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         maxBlocksLen++;
     }
 
-
-
-
     //*********
     for(int j=0;j<count;j++)
     {
         print(&fileinfos[j],l,i,s,maxLinkLen,maxSizeLen,maxBlocksLen);
     }
 
-
-
-    
+    //在fileinfos中提取目录名
+    int dirCount=0;    
+    for(int j=0;j<count;j++)
+    {    
+        if(S_ISDIR(fileinfos[j].mode))
+        dirCount++;//计算目录数量
+    }
+    char **dirNames=(char**)malloc(dirCount*sizeof(char*));
+    for(int j=0,k=0;j<count;j++)
+    {
+        if(S_ISDIR(fileinfos[j].mode))
+        {
+            dirNames[k]=(char*)malloc(sizeof(char)*MAX_NAME_LEN);
+            strcpy(dirNames[k++],fileinfos[j].name);
+        }
+    }
+    free(fileinfos);
 
 
     //实现-R，递归
     if(R)
     {
-        for(int j=0;j<count;j++)
-        {
-            if(S_ISDIR(fileinfos[j].mode))
-            {   
-                char newdirPath[1024];
-                snprintf(newdirPath,sizeof(newdirPath),"%s/%s",dirpath,fileinfos[i].name);
-                list_directory(newdirPath,a,l,R,t,r,i,s);
-            }
+        for(int j=0;j<dirCount;j++)
+        { 
+            char newdirPath[1024];
+            snprintf(newdirPath,sizeof(newdirPath),"%s/%s",dirpath,dirNames[j]);
+            list_directory(newdirPath,a,l,R,t,r,i,s);
         }
     }
 
+    free(dirNames);
     closedir(dp);
 }
-
-
-
-
-
-
-
 
 int main(int argc,char*argv[])
 {
