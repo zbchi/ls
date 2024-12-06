@@ -179,6 +179,13 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         printf("%s:\n",dirpath);
     }
 
+    DIR*dp=opendir(dirpath);
+    if(dp==NULL)
+    {
+        perror("opendir error");
+        return;
+    }
+    
     //分配初始内存
     int capasity=1024;
     struct fileinfo*fileinfos=(struct fileinfo*)malloc(sizeof(struct fileinfo)*capasity);
@@ -187,11 +194,6 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         perror("malloc error");
     }
 
-    DIR*dp=opendir(dirpath);
-    if(dp==NULL)
-    {
-        perror("opendir error");
-    }
 
     int count=0;
     struct stat filestat;
@@ -217,7 +219,11 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
 
         char filePath[1024];
         snprintf(filePath,sizeof(filePath),"%s/%s",dirpath,dirent->d_name);
-        stat(filePath,&filestat);
+        if(stat(filePath,&filestat)==-1)
+        {
+            perror("stat error");
+            continue;
+        }
         
         strcpy(fileinfos[count].name,dirent->d_name);
         fileinfos[count].inode=filestat.st_ino;
