@@ -171,11 +171,12 @@ void print(struct fileinfo*fp,int l,int i,int s,int maxLinkLen,int maxSizeLen,in
 //主要函数
 void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s)
 {
-    if(isSymlink(dirpath)||dirpath==NULL||isSpecialDirectory(dirpath))
+    if(dirpath==NULL)
     return;
 
     if(R)
     {
+        printf("\n");
         printf("%s:\n",dirpath);
     }
 
@@ -219,10 +220,10 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
 
         char filePath[1024];
         snprintf(filePath,sizeof(filePath),"%s/%s",dirpath,dirent->d_name);
-        if(stat(filePath,&filestat)==-1)
+        if(lstat(filePath,&filestat)==-1)
         {
             perror("stat error");
-            continue;
+            //continue;
         }
         
         strcpy(fileinfos[count].name,dirent->d_name);
@@ -280,7 +281,7 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         maxBlocksLen++;
     }
 
-    //*********
+    //*********核心打印
     for(int j=0;j<count;j++)
     {
         print(&fileinfos[j],l,i,s,maxLinkLen,maxSizeLen,maxBlocksLen);
