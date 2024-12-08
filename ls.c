@@ -171,6 +171,7 @@ void print(struct fileinfo*fp,int l,int i,int s,int maxLinkLen,int maxSizeLen,in
 //主要函数
 void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s)
 {
+    //printf("--------------------------------------------------\n");
     if(dirpath==NULL)
     return;
 
@@ -186,7 +187,10 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         perror("opendir error");
         return;
     }
-    
+
+
+
+
     //分配初始内存
     int capasity=1024;
     struct fileinfo*fileinfos=(struct fileinfo*)malloc(sizeof(struct fileinfo)*capasity);
@@ -287,33 +291,35 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         print(&fileinfos[j],l,i,s,maxLinkLen,maxSizeLen,maxBlocksLen);
     }
 
+   // printf("是目录的是：\n");
     //在fileinfos中提取目录名
     int dirCount=0;    
     for(int j=0;j<count;j++)
     {    
-        if(S_ISDIR(fileinfos[j].mode))
+        if(S_ISDIR(fileinfos[j].mode)&&strcmp(fileinfos[j].name,".")!=0&&strcmp(fileinfos[j].name,"..")!=0)
         dirCount++;//计算目录数量
     }
     char **dirNames=(char**)malloc(dirCount*sizeof(char*));
     for(int j=0,k=0;j<count;j++)
     {
-        if(S_ISDIR(fileinfos[j].mode))
+        if(S_ISDIR(fileinfos[j].mode)&&strcmp(fileinfos[j].name,".")!=0&&strcmp(fileinfos[j].name,"..")!=0)
         {
+            printf("%s\n",fileinfos[j].name);
             dirNames[k]=(char*)malloc(sizeof(char)*MAX_NAME_LEN);
             strcpy(dirNames[k++],fileinfos[j].name);
         }
     }
     free(fileinfos);
 
-
     //实现-R，递归
     if(R)
     {
         for(int j=0;j<dirCount;j++)
         { 
+            //printf("%s\n",dirNames[i]);
             char newdirPath[1024];
             snprintf(newdirPath,sizeof(newdirPath),"%s/%s",dirpath,dirNames[j]);
-            list_directory(newdirPath,a,l,R,t,r,i,s);
+           list_directory(newdirPath,a,l,R,t,r,i,s);
         }
     }
 
