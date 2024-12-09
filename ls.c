@@ -13,7 +13,7 @@
 
 #define MAX_NAME_LEN 256
 
-bool isSymlink(const char*path)
+/*bool isSymlink(const char*path)
 {
     struct stat st;
     return lstat(path,&st)==0&&S_ISLNK(st.st_mode);
@@ -22,7 +22,7 @@ bool isSymlink(const char*path)
 bool isSpecialDirectory(const char *path) 
 {
     return strstr(path, "/run/user/") != NULL && strstr(path, "/gvfs") != NULL;
-}
+}*/
 
 //定义文件信息结构体
 struct fileinfo
@@ -44,7 +44,14 @@ void sys_err(const char*str)
     exit(1);
 }
 
+//名称对比函数
+int compare_name(const void*a,const void*b)
+{
+    struct fileinfo*A=(struct fileinfo*)a;
+    struct fileinfo*B=(struct fileinfo*)b;
 
+    return strcmp(A->name,B->name);
+}
 //时间对比函数
 int compare_time(const void*a,const void*b)
 {
@@ -178,6 +185,9 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
     if(R)
     {
         printf("\n");
+        if(dirpath[0]=='/'&&dirpath[1]=='/')
+        printf("%s:\n",dirpath+1);
+        else 
         printf("%s:\n",dirpath);
     }
 
@@ -240,6 +250,12 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         fileinfos[count].nlink=filestat.st_nlink;
         fileinfos[count].blocks=filestat.st_blocks;
         count++;   
+    }
+
+    //按照名排序
+    if(!t)
+    {
+        qsort(fileinfos,count,sizeof(struct fileinfo),compare_name);
     }
 
     //实现-t参数，按照时间排序
