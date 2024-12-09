@@ -379,10 +379,11 @@ int main(int argc,char*argv[])
         optind++;
 
         //printf("%d\n",optind);
-        if(optind<argc||R==0)
+        if(optind<argc)
         {
             path=argv[optind];
             optind++;
+            if(R==0)
             printf("%s:\n",path);
             list_directory(path,a,l,R,t,r,i,s);
             pathCount++;
