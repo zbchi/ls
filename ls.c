@@ -304,7 +304,7 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
     {
         if(S_ISDIR(fileinfos[j].mode)&&strcmp(fileinfos[j].name,".")!=0&&strcmp(fileinfos[j].name,"..")!=0)
         {
-            printf("%s\n",fileinfos[j].name);
+            //printf("%s\n",fileinfos[j].name);
             dirNames[k]=(char*)malloc(sizeof(char)*MAX_NAME_LEN);
             strcpy(dirNames[k++],fileinfos[j].name);
         }
@@ -334,45 +334,14 @@ int main(int argc,char*argv[])
     //解析命令行参数
     //获取当前工作目录
     char *path=".";
-    while((opt=getopt(argc,argv,"alRtris"))!=-1)
+
+    int pathCount=0;
+
+    while(optind<argc)
     {
-        switch(opt)
-        {
-            case 'a':
-            a=1;
-            break;
+        //printf("--------------------------------------------\n");
+        //printf("%d\n",optind);
 
-            case 'l':
-            l=1;
-            break;
-
-            case 'R':
-            R=1;
-            break;
-
-            case 't':
-            t=1;
-            break;
-
-            case 'r':
-            r=1;
-            break;
-
-            case 'i':
-            i=1;
-            break;
-
-            case 's':
-            s=1;
-            break;
-        }
-    }
-    //还有路径参数
-    if(optind<argc)
-    {
-        path=argv[optind];
-        optind++;//跳过path本身
-        //继续解析其他参数
         while((opt=getopt(argc,argv,"alRtris"))!=-1)
         {
             switch(opt)
@@ -406,8 +375,25 @@ int main(int argc,char*argv[])
                 break;
             }
         }
+        if(pathCount>0)
+        optind++;
+
+        //printf("%d\n",optind);
+        if(optind<argc||R==0)
+        {
+            path=argv[optind];
+            optind++;
+            printf("%s:\n",path);
+            list_directory(path,a,l,R,t,r,i,s);
+            pathCount++;
+       }
+       //printf("%d\n",optind);
+      // printf("%d\n",argc);
+   }
+
+    if(pathCount==0)
+    {
+        list_directory(path,a,l,R,t,r,i,s);
     }
-    list_directory(path,a,l,R,t,r,i,s);
-    
     return 0;
 }
