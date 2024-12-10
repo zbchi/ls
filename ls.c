@@ -10,19 +10,7 @@
 #include<time.h>
 #include<stdbool.h>
 
-
 #define MAX_NAME_LEN 256
-
-/*bool isSymlink(const char*path)
-{
-    struct stat st;
-    return lstat(path,&st)==0&&S_ISLNK(st.st_mode);
-}
-
-bool isSpecialDirectory(const char *path) 
-{
-    return strstr(path, "/run/user/") != NULL && strstr(path, "/gvfs") != NULL;
-}*/
 
 //定义文件信息结构体
 struct fileinfo
@@ -178,7 +166,6 @@ void print(struct fileinfo*fp,int l,int i,int s,int maxLinkLen,int maxSizeLen,in
 //主要函数
 void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s)
 {
-    //printf("--------------------------------------------------\n");
     if(dirpath==NULL)
     return;
 
@@ -197,9 +184,6 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         perror("opendir error");
         return;
     }
-
-
-
 
     //分配初始内存
     int capasity=1024;
@@ -301,14 +285,13 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
         maxBlocksLen++;
     }
 
-    //*********核心打印
+    //*********核心打印**********
     for(int j=0;j<count;j++)
     {
         print(&fileinfos[j],l,i,s,maxLinkLen,maxSizeLen,maxBlocksLen);
     }
 
-   // printf("是目录的是：\n");
-    //在fileinfos中提取目录名
+    // printf("是目录的是：\n");
     int dirCount=0;    
     for(int j=0;j<count;j++)
     {    
@@ -332,10 +315,9 @@ void list_directory(const char*dirpath,int a,int l,int R,int t,int r,int i,int s
     {
         for(int j=0;j<dirCount;j++)
         { 
-            //printf("%s\n",dirNames[i]);
             char newdirPath[1024];
             snprintf(newdirPath,sizeof(newdirPath),"%s/%s",dirpath,dirNames[j]);
-           list_directory(newdirPath,a,l,R,t,r,i,s);
+            list_directory(newdirPath,a,l,R,t,r,i,s);
         }
     }
 
@@ -355,9 +337,6 @@ int main(int argc,char*argv[])
 
     while(optind<argc)
     {
-        //printf("--------------------------------------------\n");
-        //printf("%d\n",optind);
-
         while((opt=getopt(argc,argv,"alRtris"))!=-1)
         {
             switch(opt)
@@ -391,10 +370,10 @@ int main(int argc,char*argv[])
                 break;
             }
         }
+
         if(pathCount>0)
         optind++;
 
-        //printf("%d\n",optind);
         if(optind<argc)
         {
             path=argv[optind];
@@ -404,9 +383,7 @@ int main(int argc,char*argv[])
             list_directory(path,a,l,R,t,r,i,s);
             pathCount++;
        }
-       //printf("%d\n",optind);
-      // printf("%d\n",argc);
-   }
+    }
 
     if(pathCount==0)
     {
